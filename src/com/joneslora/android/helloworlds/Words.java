@@ -60,13 +60,11 @@ public class Words {
 			ySpeed = -ySpeed;
 		}
 		y = y + ySpeed;
-
-		Log.d("WORDS UPDATING", "x: " + x + ", y: " + y + ", xSpeed: " + xSpeed + ", ySpeed: " + ySpeed);
 	}
 
 	public void onDraw(Canvas canvas) {
 		update();
-		canvas.drawBitmap(bmp, x , y, null);
-//		canvas.drawText(text, x, y, paint);
+//		canvas.drawBitmap(bmp, x , y, null);
+		canvas.drawText(text, x, y, paint);
 	}
 }  
