@@ -9,7 +9,7 @@ import android.util.Log;
 import java.util.Random;
 
 public class Words {
-	private static final int MAX_SPEED = 25;
+	public static final int MAX_SPEED = 25;
 	private GameView gameView;
 	private Bitmap bmp;
 	private int x = 0;
@@ -22,17 +22,20 @@ public class Words {
 	private String text;
 	private Paint paint;
 	
+	private boolean autoMove = true;
+	
+	private Rect clickedRect;
+	
 	public Words(GameView gameView, Bitmap bmp) {
 		this.width = bmp.getWidth();  
 		this.height = bmp.getHeight();
 		this.gameView=gameView;
 		this.bmp=bmp;
 
-		Random rnd = new Random();
-		x = rnd.nextInt(gameView.getWidth() - width);
-		y = rnd.nextInt(gameView.getHeight() - height);
-		xSpeed = rnd.nextInt(MAX_SPEED * 2) - MAX_SPEED;
-		ySpeed = rnd.nextInt(MAX_SPEED * 2) - MAX_SPEED;
+		x = randomX();
+		y = randomY();
+		xSpeed = randomSpeed();
+		ySpeed = randomSpeed();
 	}
 
 	public Words(GameView gameView, String text, Paint paint) {
@@ -44,13 +47,91 @@ public class Words {
 		this.text = text;
 		this.paint = paint;
 		
+		x = randomX();
+		y = randomY();
+		xSpeed = randomSpeed();
+		ySpeed = randomSpeed();
+	}
+	
+	private int randomSpeed() {
 		Random rnd = new Random();
-		x = rnd.nextInt(gameView.getWidth() - width);
-		y = rnd.nextInt(gameView.getHeight() - height);
-		xSpeed = rnd.nextInt(MAX_SPEED * 2) - MAX_SPEED;
-		ySpeed = rnd.nextInt(MAX_SPEED * 2) - MAX_SPEED;
+		return rnd.nextInt(MAX_SPEED * 2) - MAX_SPEED;
+	}
+	
+	private int randomX() {
+		Random rnd = new Random();
+		return rnd.nextInt(gameView.getWidth() - width);
+	}
+	
+	private int randomY() {
+		Random rnd = new Random();
+		return rnd.nextInt(gameView.getHeight() - height);
 	}
 
+	public int getX() {
+		return this.x;
+	}
+	
+	public int getY() {
+		return this.y;
+	}
+	
+	public int getWidth() {
+		return this.width;
+	}
+	
+	public int getHeight() {
+		return this.height;
+	}
+	
+	public int getLeft() {
+		return this.x;
+	}
+	
+	public int getTop() {
+		return this.y - this.height;
+	}
+	
+	public int getRight() {
+		return this.x + this.width;
+	}
+	
+	public int getBottom() {
+		return this.y;
+	}
+	
+	public void setXSpeed(int newXSpeed) {
+		this.xSpeed = newXSpeed;
+	}
+	
+	public void setYSpeed(int newYSpeed) {
+		this.ySpeed = newYSpeed;
+	}
+	
+	public boolean isTouched(int x, int y) {
+		int left = getLeft()-25, right = getRight()+25, top = getTop()-25, bottom = getBottom()+25;
+		clickedRect = new Rect(left, top, right, bottom);
+		if(left <= x && x <= right) {
+			if(top <= y && y <= bottom) {
+				return true;
+			}
+		}
+		
+		clickedRect = null;
+		return false;
+	}
+	
+	public void setAutoMove(boolean autoMove) {
+		this.autoMove = autoMove;
+	}
+	
+	public void toggleAutoMove() {
+		if(autoMove)
+			autoMove = false;
+		else
+			autoMove = true;
+	}
+	
 	private void update() {
 		if (x >= gameView.getWidth() - width - xSpeed || x + xSpeed <= 0) {
 			xSpeed = -xSpeed;
@@ -63,8 +144,18 @@ public class Words {
 	}
 
 	public void onDraw(Canvas canvas) {
-		update();
-//		canvas.drawBitmap(bmp, x , y, null);
-		canvas.drawText(text, x, y, paint);
+		if(autoMove) {
+			update();
+			canvas.drawText(text, x, y, paint);
+		}
+		else {
+			canvas.drawText(text, x, y, paint);
+			if(clickedRect!=null) {
+				Paint clickPaint = new Paint();
+				clickPaint.setARGB(200, 255, 0, 0);
+				canvas.drawRect(clickedRect, clickPaint);
+				clickedRect = null;
+			}
+		}
 	}
 }  
