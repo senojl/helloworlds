@@ -16,6 +16,7 @@ public class Words {
 	private int y = 0;
 	private int xSpeed;
 	private int ySpeed;
+	private int naturalXSpeed, naturalYSpeed;
 	private int width;
 	private int height;
 
@@ -36,6 +37,8 @@ public class Words {
 		y = randomY();
 		xSpeed = randomSpeed();
 		ySpeed = randomSpeed();
+		naturalXSpeed = xSpeed;
+		naturalYSpeed = ySpeed;
 	}
 
 	public Words(GameView gameView, String text, Paint paint) {
@@ -108,8 +111,34 @@ public class Words {
 		this.ySpeed = newYSpeed;
 	}
 	
+	public void setX(int x) {
+		if(x < 0) {
+			this.x = 0;
+		}
+		else if(x > gameView.getWidth()-width) {
+			this.x = gameView.getWidth()-width;
+		}
+		else {
+			this.x = x;
+		}
+		Log.d("prisoner setX", "actual x = " + x);
+	}
+	
+	public void setY(int y) {
+		if(y < 0) {
+			this.y = 0;
+		}
+		else if(y > gameView.getHeight()-height) {
+			this.y = gameView.getHeight()-height;
+		}
+		else {
+			this.y = y;
+		}
+		Log.d("prisoner setY", "actual y = " + y);
+	}
+	
 	public boolean isTouched(int x, int y) {
-		int left = getLeft()-25, right = getRight()+25, top = getTop()-25, bottom = getBottom()+25;
+		int left = getLeft()-30, right = getRight()+30, top = getTop()-30, bottom = getBottom()+30;
 		clickedRect = new Rect(left, top, right, bottom);
 		if(left <= x && x <= right) {
 			if(top <= y && y <= bottom) {
@@ -150,12 +179,12 @@ public class Words {
 		}
 		else {
 			canvas.drawText(text, x, y, paint);
-			if(clickedRect!=null) {
-				Paint clickPaint = new Paint();
-				clickPaint.setARGB(200, 255, 0, 0);
-				canvas.drawRect(clickedRect, clickPaint);
-				clickedRect = null;
+//			if(clickedRect!=null) {
+//				Paint clickPaint = new Paint();
+//				clickPaint.setARGB(200, 255, 0, 0);
+//				canvas.drawRect(clickedRect, clickPaint);
+//				clickedRect = null;
 			}
 		}
 	}
-}  
+  

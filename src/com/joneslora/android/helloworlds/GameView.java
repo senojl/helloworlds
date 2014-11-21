@@ -27,6 +27,7 @@ public class GameView extends SurfaceView {
 	private SurfaceHolder holder;
 	private GameLoopThread gameLoopThread;
 	private List<Words> words = new ArrayList<Words>();
+	private List<Words> prison = new ArrayList<Words>();
 	private Context mContext;
 	private Scroller mScroller;
 	private GestureDetector mGestureDetector;
@@ -58,7 +59,8 @@ public class GameView extends SurfaceView {
 			public void surfaceCreated(SurfaceHolder holder) {
 				createWords();
 				gameLoopThread.setRunning(true);
-				gameLoopThread.start();
+				if(!gameLoopThread.isAlive())
+					gameLoopThread.start();
 			}
 
 			@Override
@@ -297,6 +299,9 @@ public class GameView extends SurfaceView {
 
 	private class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
 
+		
+		
+		// Another possible step 2 - didn't move
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
     		int x = (int) e.getX();
@@ -310,26 +315,68 @@ public class GameView extends SurfaceView {
             return true;
         }
         
+      
+        
+        // Step 1 - tap down
         @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        public boolean onDown(MotionEvent e) {
+    		for(Words prisoner : words) {
+    			if(prisoner.isTouched((int) e.getX(), (int) e.getY())) {
+    				// Do whatever happens when a word is captured by a tap
+    				prisoner.setAutoMove(false);
+    				prison.add(prisoner);
+    			}
+    		}
         	return true;
         }
+        
+        // Step 2 - move
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+    		for(Words prisoner : words) {
+    			if(prisoner.isTouched((int) e2.getX(), (int) e2.getY())) {
+    				// Do whatever happens when a word is scrolled through
+    				if(!prison.contains(prisoner)) {
+        				
+    					prison.add(prisoner);
+    				}
+    			}
+    		}
+    		
+    		for(Words prisoner : prison) {
+    			int newPrisonerX = prisoner.getX() - (int) distanceX;
+    			int newPrisonerY = prisoner.getY() - (int) distanceY;
 
+    			Log.d("prisoner onScroll()", "trying newPrisonerX = " + newPrisonerX + ", newPrisonerY = " + newPrisonerY);
+    			prisoner.setX((int)e2.getX());
+    			prisoner.setY((int)e2.getY());
+    		}
+    		
+        	return true;
+        }
+        
+        private void pardonPrisoners() {
+        	for(Words prisoner : prison) {
+        		prisoner.setAutoMove(true);
+        		prison.remove(prisoner);
+        	}
+        }
+        
+    
+
+        // Step 3 - lifted finger and gives you first onDown event and event where you lifted finger
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
         float velocityY) {
-//            final int SWIPE_MIN_DISTANCE = 120;
-//            final int SWIPE_MAX_OFF_PATH = 250;
-//            final int SWIPE_THRESHOLD_VELOCITY = 200;
             try {
             	int gameViewWidth = getWidth();
             	int gameViewHeight = getHeight();
             	
                 float dx = (e1.getX() - e2.getX());
-                float dy = Math.abs(e1.getY() - e2.getY());
+                float dy = (e1.getY() - e2.getY());
 
                 float percentChangedX = -dx / gameViewWidth;
-                float percentChangedY = dy / gameViewHeight;
+                float percentChangedY = -dy / gameViewHeight;
                 
                 float normalizedVelocityX = Words.MAX_SPEED * percentChangedX;
                 float normalizedVelocityY = Words.MAX_SPEED * percentChangedY;
@@ -338,18 +385,16 @@ public class GameView extends SurfaceView {
         				", e2.x: " + e2.getX() + ", e2.y: " + e2.getY() + 
         				", velocityX: " + velocityX + ", velocityY: " + velocityY);
         		
-        		for(Words word : words) {
-        			if(word.isTouched((int) e1.getX(), (int) e1.getY())) {
-        				// Do whatever happens when a word is touched
-        				word.setXSpeed((int) normalizedVelocityX);
-        				word.setYSpeed((int) normalizedVelocityY);
-        			}
-        		}
+        		// update their new velocities
+        		
+        		// Let them be freeee!!
+        		pardonPrisoners();
                 
                 return true;
             } catch (Exception e) {
             }
             return super.onFling(e1, e2, velocityX, velocityY);
         }
+       
     }
 }
